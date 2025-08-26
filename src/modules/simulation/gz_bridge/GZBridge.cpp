@@ -97,9 +97,11 @@ int GZBridge::init()
 	// odom: /world/$WORLD/model/$MODEL/link/base_link/odometry_with_covariance
 	std::string odometry_topic = "/model/" + _model_name + "/odometry_with_covariance";
 
-	if (!_node.Subscribe(odometry_topic, &GZBridge::odometryCallback, this)) {
-		PX4_ERR("failed to subscribe to %s", odometry_topic.c_str());
-		return PX4_ERROR;
+	if (_sim_gz_en_odom.get()) {
+		if (!_node.Subscribe(odometry_topic, &GZBridge::odometryCallback, this)) {
+			PX4_ERR("failed to subscribe to %s", odometry_topic.c_str());
+			return PX4_ERROR;
+		}
 	}
 
 	// Laser Scan: optional
@@ -113,43 +115,53 @@ int GZBridge::init()
 	std::string lidar_sensor = "/world/" + _world_name + "/model/" + _model_name +
 				   "/link/lidar_sensor_link/sensor/lidar/scan";
 
-	if (!_node.Subscribe(lidar_sensor, &GZBridge::laserScantoLidarSensorCallback, this)) {
-		PX4_WARN("failed to subscribe to %s", lidar_sensor.c_str());
+	if (_sim_gz_en_lidar.get()) {
+		if (!_node.Subscribe(lidar_sensor, &GZBridge::laserScantoLidarSensorCallback, this)) {
+			PX4_WARN("failed to subscribe to %s", lidar_sensor.c_str());
+		}
 	}
 
 	// Airspeed: /world/$WORLD/model/$MODEL/link/airspeed_link/sensor/air_speed/air_speed
 	std::string airspeed_topic = "/world/" + _world_name + "/model/" + _model_name +
 				     "/link/airspeed_link/sensor/air_speed/air_speed";
 
-	if (!_node.Subscribe(airspeed_topic, &GZBridge::airspeedCallback, this)) {
-		PX4_ERR("failed to subscribe to %s", airspeed_topic.c_str());
-		return PX4_ERROR;
+	if (_sim_gz_en_aspd.get()) {
+		if (!_node.Subscribe(airspeed_topic, &GZBridge::airspeedCallback, this)) {
+			PX4_ERR("failed to subscribe to %s", airspeed_topic.c_str());
+			return PX4_ERROR;
+		}
 	}
 
 	// Air pressure: /world/$WORLD/model/$MODEL/link/base_link/sensor/air_pressure_sensor/air_pressure
 	std::string air_pressure_topic = "/world/" + _world_name + "/model/" + _model_name +
 					 "/link/base_link/sensor/air_pressure_sensor/air_pressure";
 
-	if (!_node.Subscribe(air_pressure_topic, &GZBridge::barometerCallback, this)) {
-		PX4_ERR("failed to subscribe to %s", air_pressure_topic.c_str());
-		return PX4_ERROR;
+	if (_sim_gz_en_baro.get()) {
+		if (!_node.Subscribe(air_pressure_topic, &GZBridge::barometerCallback, this)) {
+			PX4_ERR("failed to subscribe to %s", air_pressure_topic.c_str());
+			return PX4_ERROR;
+		}
 	}
 
 	// GPS: /world/$WORLD/model/$MODEL/link/base_link/sensor/navsat_sensor/navsat
 	std::string nav_sat_topic = "/world/" + _world_name + "/model/" + _model_name +
 				    "/link/base_link/sensor/navsat_sensor/navsat";
 
-	if (!_node.Subscribe(nav_sat_topic, &GZBridge::navSatCallback, this)) {
-		PX4_ERR("failed to subscribe to %s", nav_sat_topic.c_str());
-		return PX4_ERROR;
+	if (_sim_gz_en_gps.get()) {
+		if (!_node.Subscribe(nav_sat_topic, &GZBridge::navSatCallback, this)) {
+			PX4_ERR("failed to subscribe to %s", nav_sat_topic.c_str());
+			return PX4_ERROR;
+		}
 	}
 
 	std::string flow_topic = "/world/" + _world_name + "/model/" + _model_name +
 				 "/link/flow_link/sensor/optical_flow/optical_flow";
 
-	if (!_node.Subscribe(flow_topic, &GZBridge::opticalFlowCallback, this)) {
-		PX4_ERR("failed to subscribe to %s", flow_topic.c_str());
-		return PX4_ERROR;
+	if (_sim_gz_en_flow.get()) {
+		if (!_node.Subscribe(flow_topic, &GZBridge::opticalFlowCallback, this)) {
+			PX4_ERR("failed to subscribe to %s", flow_topic.c_str());
+			return PX4_ERROR;
+		}
 	}
 
 	if (!_mixing_interface_esc.init(_model_name)) {
