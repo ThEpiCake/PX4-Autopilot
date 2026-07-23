@@ -1,0 +1,22 @@
+#!/bin/sh
+#
+# @name Gazebo x500 swarm SITL — GPS + EV yaw
+#
+# @type Quadrotor
+#
+# SITL-only airframe for the swarm thesis project.
+# Uses GPS for XY/Z position (EKF2_GPS_CTRL=7) and external vision yaw
+# only (EKF2_EV_CTRL=8, bit-3) supplied by gz_truth_bridge.py reading
+# Gazebo ground-truth pose.  Switch to 4022 + slam_to_px4.py for real
+# hardware (EKF2_EV_CTRL=15, EKF2_GPS_CTRL=0).
+#
+
+PX4_SIM_MODEL=${PX4_SIM_MODEL:=x500_swarm}
+
+. ${R}etc/init.d-posix/airframes/4001_gz_x500
+
+# EV yaw from Gazebo ground truth (gz_truth_bridge.py).
+# bit-3 = yaw fusion only; GPS fuses XY+Z position and velocity.
+param set-default EKF2_EV_CTRL 8
+param set-default EKF2_EV_DELAY 0
+param set-default EKF2_EV_NOISE_MD 0
