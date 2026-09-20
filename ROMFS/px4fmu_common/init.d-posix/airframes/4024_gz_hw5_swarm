@@ -1,0 +1,78 @@
+#!/bin/sh
+#
+# @name Gazebo 5-inch ducted cinewhoop (thesis hardware twin), indoor GNSS-denied
+#
+# @type Quadrotor
+#
+# Sim twin of the thesis build: Lumenier QAV-PRO Whoop 5" Cinequads frame,
+# 4x Lumenier ZIP V2 2807 1700KV on HQProp Ethix S5 5x4x3, 6S, ~1.55 kg AUW.
+# Inherits the whole indoor GNSS-denied / external-vision stack from 4022 and
+# overrides only what the smaller airframe changes: rotor geometry and the
+# thrust mapping.
+#
+# Created 2026-08-16 to close the drone-size gap documented in
+# thesis_ws/docs/n28-cage-twin-world.md section 6: the cage twin was measured
+# for the real 5" drone, but the sim was flying a 600 mm x500. That gap was
+# blocked on build-week measurements, and build week moved to 2026-11-17.
+#
+
+PX4_SIM_MODEL=${PX4_SIM_MODEL:=hw5_d435i}
+
+. ${R}etc/init.d-posix/airframes/4022_gz_x500_swarm
+
+echo "Configuring 5-inch ducted cinewhoop geometry and thrust"
+
+# ---------------------------------------------------------------------------
+# Rotor geometry. Four 142 mm ducts inside a 340 x 285 mm envelope put the
+# motor centres at +/-99 mm (X, forward) by +/-71 mm (Y, right) -> a 243.7 mm
+# diagonal wheelbase. Rotor ORDER and KM SIGNS are inherited unchanged from
+# 4001_gz_x500 so the allocation convention cannot drift; only the arm lengths
+# move. Unlike the stock x500 airframe, these values match the SDF exactly.
+#
+# KM scales with prop diameter: 5" / 10" = 0.5, so 0.05 -> 0.025.
+# ---------------------------------------------------------------------------
+param set-default CA_ROTOR0_PX 0.099
+param set-default CA_ROTOR0_PY 0.071
+param set-default CA_ROTOR0_KM 0.025
+
+param set-default CA_ROTOR1_PX -0.099
+param set-default CA_ROTOR1_PY -0.071
+param set-default CA_ROTOR1_KM 0.025
+
+param set-default CA_ROTOR2_PX 0.099
+param set-default CA_ROTOR2_PY -0.071
+param set-default CA_ROTOR2_KM -0.025
+
+param set-default CA_ROTOR3_PX -0.099
+param set-default CA_ROTOR3_PY 0.071
+param set-default CA_ROTOR3_KM -0.025
+
+# ---------------------------------------------------------------------------
+# Thrust mapping. The SDF uses motorConstant 2.94e-06 with maxRotVelocity 2800,
+# back-solved from the surveyed static thrust (~2.35 kg per motor):
+#   T_max  = 2.94e-06 * 2800^2       = 23.0 N per rotor  -> T/W ~6.0 at 1.55 kg
+#   w_hover = sqrt((1.55*9.81/4)/k)  = 1137 rad/s
+#   throttle_hover = (1137-150)/(2800-150) = 0.37
+# The 37% prediction agrees with the market survey's independent 33-40% band,
+# which is the sanity check on the whole chain.
+# ---------------------------------------------------------------------------
+param set-default SIM_GZ_EC_MAX1 2800
+param set-default SIM_GZ_EC_MAX2 2800
+param set-default SIM_GZ_EC_MAX3 2800
+param set-default SIM_GZ_EC_MAX4 2800
+
+param set-default MPC_THR_HOVER 0.37
+
+# ---------------------------------------------------------------------------
+# Indoor envelope. The cage is 9 x 6 x 7.5 m. The speed sweep of 16.9.2026
+# compares 0.5 / 1.3 / 1.8 m/s, so the horizontal ceiling is 2.0 -- headroom
+# above the fastest arm, still far below the airframe's authority. The
+# commanded speed is set per run (v_max_mps); this is only the clamp that
+# stops the position controller from being asked for more than the sweep uses.
+# Tilt stays at 25 deg: g*tan(25) = 4.57 m/s^2 of horizontal authority, and
+# mission_params.speed_envelope grants at most half of it for braking.
+# ---------------------------------------------------------------------------
+param set-default MPC_XY_VEL_MAX 2.0
+param set-default MPC_Z_VEL_MAX_UP 1.0
+param set-default MPC_Z_VEL_MAX_DN 1.0
+param set-default MPC_TILTMAX_AIR 25.0
