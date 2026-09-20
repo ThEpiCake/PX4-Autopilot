@@ -24,12 +24,17 @@ param set-default SENS_FLOW_MINHGT 0.0
 # External vision (SLAM/VIO via slam_to_px4.py) feeds /fmu/in/vehicle_visual_odometry.
 # EKF2_EV_CTRL=15: fuse all EV: XY+Z position, velocity, yaw.
 # EKF2_MAG_TYPE=5: disable magnetometer completely — prevents heading resets on wall impact.
-# EKF2_EV_NOISE_MD=1: use per-message covariance from slam_to_px4 (0.20 m² XY, 0.10 m² Z).
+# EKF2_EV_NOISE_MD=0: use the per-message covariance (mocap_to_px4 / slam_to_px4
+#   set it), floored by EKF2_EVP_NOISE. NOTE (fixed 20.9.2026): in PX4 v1.16
+#   mode 1 means the OPPOSITE — ignore the message and use the parameter only
+#   (src/modules/ekf2/EKF2.cpp ~2471). Until today this file said 1 with a 0.20 m
+#   floor, so EKF2 treated the mm-accurate mocap as a 20 cm sensor and smoothed
+#   away any injected pose noise. The hardware sets (03/04 params) match this now.
 # EKF2_BARO_CTRL=0: disable barometer; height from EV Z (rangefinder → odom → TF → EV).
 param set-default EKF2_EV_CTRL 15
 param set-default EKF2_EV_DELAY 50
-param set-default EKF2_EVP_NOISE 0.20
-param set-default EKF2_EV_NOISE_MD 1
+param set-default EKF2_EVP_NOISE 0.01
+param set-default EKF2_EV_NOISE_MD 0
 param set-default EKF2_EVP_GATE 10
 param set-default EKF2_MAG_TYPE 5
 param set-default EKF2_BARO_CTRL 1
