@@ -30,7 +30,10 @@ param set-default SENS_FLOW_MINHGT 0.0
 #   (src/modules/ekf2/EKF2.cpp ~2471). Until today this file said 1 with a 0.20 m
 #   floor, so EKF2 treated the mm-accurate mocap as a 20 cm sensor and smoothed
 #   away any injected pose noise. The hardware sets (03/04 params) match this now.
-# EKF2_BARO_CTRL=0: disable barometer; height from EV Z (rangefinder → odom → TF → EV).
+# EKF2_BARO_CTRL=1: the barometer stays enabled. EKF2_HGT_REF=3 keeps EV Z as the
+#   height reference; the baro is fused as a secondary height source with its bias
+#   estimated. (Until 27.9.2026 this comment said 0 / disabled while the line below
+#   has set 1 since the file was created. The hardware sets 03/04 use 0.)
 param set-default EKF2_EV_CTRL 15
 param set-default EKF2_EV_DELAY 50
 param set-default EKF2_EVP_NOISE 0.01
