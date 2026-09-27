@@ -34,6 +34,12 @@ param set-default SENS_FLOW_MINHGT 0.0
 #   height reference; the baro is fused as a secondary height source with its bias
 #   estimated. (Until 27.9.2026 this comment said 0 / disabled while the line below
 #   has set 1 since the file was created. The hardware sets 03/04 use 0.)
+# SIM_GZ_EN_ODOM=0 (27.9.2026): PX4's own gz_bridge otherwise subscribes to the model's
+#   Gazebo odometry and publishes the TRUE pose straight into vehicle_visual_odometry,
+#   next to whatever mocap_to_px4 / slam_to_px4 sends. Every sim run until today fused
+#   both streams (truth at 1e-4 variance beside the degraded one); the 20.9 noise sweep
+#   therefore never measured what it claimed. The only EV source is now the ROS bridge.
+param set-default SIM_GZ_EN_ODOM 0
 param set-default EKF2_EV_CTRL 15
 param set-default EKF2_EV_DELAY 50
 param set-default EKF2_EVP_NOISE 0.01
