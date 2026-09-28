@@ -17,7 +17,21 @@ param set-default COM_ARM_WO_GPS 1
 # Optical flow in the default Gazebo room is fragile over low-texture surfaces and
 # fights with external-vision fusion. For the SLAM/VIO indoor stack, trust EV XY/vel/yaw
 # and keep the rangefinder only for height.
-param set-default EKF2_OF_CTRL 0      # x500_swarm has no optical-flow sensor
+# Optical flow + rangefinder as EKF2's safety net (28.9.2026, owner's decision after the
+# VIO runs): every sim twin flown since August (x500_d435i, hw5_d435i, hw5_d435i_sync)
+# includes model://optical_flow, and SIM_GZ_EN_FLOW=1 already delivers vehicle_optical_flow
+# at 50 Hz (quality 0-255, zero when the 100x100 flow camera sees nothing). With
+# EKF2_OF_CTRL=0 a VIO loss dropped EKF2 to IMU-only dead reckoning; with flow and the
+# downward range fused it degrades to flow odometry instead. Mirrors the hardware VIO set
+# swarm_hw_bringup/px4_params/04_ekf2_vio.params (EKF2_OF_CTRL 1, EKF2_RNG_CTRL 1).
+# Sensor position from the model include (FLU 0.03 0 -0.10 -> FRD 0.03 0 +0.10).
+# Quality gate 1 = PX4's default, stated so the zero-quality frames are visibly dropped.
+param set-default EKF2_OF_CTRL 1
+param set-default EKF2_RNG_CTRL 1      # conditional range aiding (default), stated
+param set-default EKF2_OF_QMIN 1
+param set-default EKF2_OF_POS_X 0.03
+param set-default EKF2_OF_POS_Y 0.0
+param set-default EKF2_OF_POS_Z 0.10
 param set-default EKF2_HGT_REF 3      # Vision (EV Z) as primary height reference
 param set-default SENS_FLOW_MINHGT 0.0
 
